@@ -1,0 +1,240 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>石岡市フォトフレーム</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: #f5f2eb; color: #333;
+  font-family: sans-serif; text-align: center;
+}
+header { padding: 16px 8px 10px; font-weight: bold; }
+main { width: min(100%, 440px); margin: auto; padding: 8px 14px 24px; }
+.stage {
+  position: relative; width: 100%; aspect-ratio: 3 / 4;
+  overflow: hidden; background: #ddd; border-radius: 14px;
+}
+video, #preview {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover;
+}
+#preview { display: none; }
+.frame {
+  position: absolute; inset: 0; pointer-events: none;
+  border: 8px solid #c4a36c;
+  box-shadow: inset 0 0 0 2px white;
+}
+.frame::before {
+  content: "石岡市 PHOTO FRAME";
+  position: absolute; top: 12px; left: 8px; right: 8px;
+  padding: 10px 4px; color: #493a26; background: #fffdf0dd;
+  font-weight: bold; font-size: 15px;
+}
+.frame::after {
+  content: "ISHIOKA";
+  position: absolute; bottom: 12px; left: 8px; right: 8px;
+  padding: 12px; color: #493a26; background: #fffdf0dd;
+  font-size: 13px; letter-spacing: 3px;
+}
+button, .save {
+  display: inline-block; border: 0; border-radius: 24px;
+  padding: 13px 18px; margin: 6px 3px; font-size: 15px;
+  background: #526448; color: white; cursor: pointer;
+  text-decoration: none;
+}
+button:disabled { opacity: .45; }
+#shoot { background: #a36d36; font-size: 18px; padding: 16px 32px; }
+#status { font-size: 13px; line-height: 1.6; padding: 6px; }
+#result { display: none; margin-top: 12px; }
+#result img { width: 100%; border-radius: 12px; }
+.small { font-size: 12px; color: #666; line-height: 1.6; }
+</style>
+</head>
+<body>
+<header>石岡市 フォトフレーム</header>
+<main>
+  <div class="stage">
+    <video id="camera" autoplay muted playsinline></video>
+    <img id="preview" alt="撮影した写真">
+    <div class="frame" id="frame"></div>
+  </div>
+
+  <div id="status">カメラを準備しています…</div>
+
+  <div id="cameraControls">
+    <button id="switch">前面・背面を切替</button>
+    <br>
+    <button id="shoot" disabled>● 撮影する</button>
+  </div>
+
+  <div id="result">
+    <p>撮影しました！写真を保存できます。</p>
+    <a id="save" class="save" href="#" download="ishioka-photo.png">
+      写真を保存
+    </a>
+    <br>
+    <button id="again">もう一度撮影</button>
+  </div>
+
+  <p class="small">
+    カメラが起動しない場合は、ブラウザのカメラ使用を許可してください。<br>
+    写真はこの端末内で合成します。
+  </p>
+</main>
+
+<canvas id="canvas" width="1080" height="1440" hidden></canvas>
+
+<script>
+const video = document.getElementById("camera");
+const preview = document.getElementById("preview");
+const frame = document.getElementById("frame");
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+const shoot = document.getElementById("shoot");
+const status = document.getElementById("status");
+const result = document.getElementById("result");
+const save = document.getElementById("save");
+
+let stream = null;
+let facing = "environment";
+let photoUrl = null;
+let frameImage = new Image();
+let hasFrameImage = false;
+
+// frame.png があれば、実際の透過フレームを読み込みます。
+frameImage.onload = () => { hasFrameImage = true; };
+frameImage.onerror = () => { hasFrameImage = false; };
+frameImage.src = "frame.png";
+
+async function startCamera() {
+  shoot.disabled = true;
+  status.textContent = "カメラを起動しています…";
+
+  if (stream) {
+    stream.getTracks().forEach(track => track.stop());
+  }
+
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: {
+        facingMode: { ideal: facing },
+        width: { ideal: 1080 },
+        height: { ideal: 1440 }
+      }
+    });
+
+    video.srcObject = stream;
+    await video.play();
+
+    status.textContent = "準備完了！シャッターを押してください。";
+    shoot.disabled = false;
+  } catch (err) {
+    status.textContent =
+      "カメラを起動できません。HTTPSで開いているか確認し、カメラを許可してください。";
+  }
+}
+
+function drawCover(source, sw, sh, mirror = false) {
+  const cw = canvas.width, ch = canvas.height;
+  const scale = Math.max(cw / sw, ch / sh);
+  const dw = sw * scale, dh = sh * scale;
+  const dx = (cw - dw) / 2, dy = (ch - dh) / 2;
+
+  ctx.save();
+  if (mirror) {
+    ctx.translate(cw, 0);
+    ctx.scale(-1, 1);
+  }
+  ctx.drawImage(source, dx, dy, dw, dh);
+  ctx.restore();
+}
+
+function drawFallbackFrame() {
+  const w = canvas.width, h = canvas.height;
+  ctx.save();
+  ctx.strokeStyle = "#c4a36c";
+  ctx.lineWidth = 24;
+  ctx.strokeRect(12, 12, w - 24, h - 24);
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = 5;
+  ctx.strokeRect(30, 30, w - 60, h - 60);
+
+  ctx.fillStyle = "#fffdf0e8";
+  ctx.fillRect(35, 45, w - 70, 90);
+  ctx.fillStyle = "#493a26";
+  ctx.textAlign = "center";
+  ctx.font = "bold 38px sans-serif";
+  ctx.fillText("石岡市 PHOTO FRAME", w / 2, 103);
+
+  ctx.fillStyle = "#fffdf0e8";
+  ctx.fillRect(35, h - 125, w - 70, 80);
+  ctx.font = "bold 28px sans-serif";
+  ctx.fillText("ISHIOKA", w / 2, h - 76);
+  ctx.restore();
+}
+
+shoot.addEventListener("click", () => {
+  if (!stream || !video.videoWidth) return;
+
+  drawCover(
+    video, video.videoWidth, video.videoHeight,
+    facing === "user"
+  );
+
+  if (hasFrameImage) {
+    ctx.drawImage(frameImage, 0, 0, canvas.width, canvas.height);
+  } else {
+    drawFallbackFrame();
+  }
+
+  canvas.toBlob(blob => {
+    if (!blob) {
+      status.textContent = "写真を作成できませんでした。もう一度お試しください。";
+      return;
+    }
+
+    if (photoUrl) URL.revokeObjectURL(photoUrl);
+    photoUrl = URL.createObjectURL(blob);
+
+    preview.src = photoUrl;
+    preview.style.display = "block";
+    video.style.display = "none";
+    frame.style.display = "none";
+
+    save.href = photoUrl;
+    result.style.display = "block";
+    document.getElementById("cameraControls").style.display = "none";
+    status.textContent = "撮影できました。下のボタンから写真を保存してください。";
+
+    // 保存を自動で試みます。端末によっては手動操作が必要です。
+    save.click();
+  }, "image/png");
+});
+
+document.getElementById("switch").addEventListener("click", async () => {
+  facing = facing === "environment" ? "user" : "environment";
+  await startCamera();
+});
+
+document.getElementById("again").addEventListener("click", () => {
+  preview.style.display = "none";
+  video.style.display = "block";
+  frame.style.display = "block";
+  result.style.display = "none";
+  document.getElementById("cameraControls").style.display = "block";
+  startCamera();
+});
+
+// QRコードから開いたときにカメラ起動を試みます。
+if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+  startCamera();
+} else {
+  status.textContent = "カメラにはHTTPS接続のブラウザが必要です。";
+}
+</script>
+</body>
+</html>
