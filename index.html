@@ -85,7 +85,7 @@ button:disabled { opacity: .45; }
   </p>
 </main>
 
-<canvas id="canvas" width="1080" height="1440" hidden></canvas>
+<canvas id="canvas" width="1600" height="1024" hidden></canvas>
 
 <script>
 const video = document.getElementById("camera");
@@ -122,8 +122,8 @@ async function startCamera() {
       audio: false,
       video: {
         facingMode: { ideal: facing },
-        width: { ideal: 1080 },
-        height: { ideal: 1440 }
+        width: { ideal: 1600 },
+        height: { ideal: 1024 }
       }
     });
 
