@@ -179,7 +179,7 @@ button:disabled { opacity: .45; }
 <script>
 const video = document.getElementById("camera");
 const preview = document.getElementById("preview");
-const frame = document.getElementById("frame");
+const frameOverlay = document.getElementById("frameOverlay");
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 const shoot = document.getElementById("shoot");
@@ -218,6 +218,13 @@ async function startCamera() {
 
     video.srcObject = stream;
     await video.play();
+    try {
+  if (screen.orientation && screen.orientation.lock) {
+    await screen.orientation.lock("landscape");
+  }
+} catch (e) {
+  // 対応していない端末では、手動で横向きにします。
+}
 
     status.textContent = "準備完了！シャッターを押してください。";
     shoot.disabled = false;
@@ -292,7 +299,7 @@ shoot.addEventListener("click", () => {
     preview.src = photoUrl;
     preview.style.display = "block";
     video.style.display = "none";
-    frame.style.display = "none";
+    frameOverlay.style.display = "none";
 
     save.href = photoUrl;
     result.style.display = "block";
@@ -312,7 +319,7 @@ document.getElementById("switch").addEventListener("click", async () => {
 document.getElementById("again").addEventListener("click", () => {
   preview.style.display = "none";
   video.style.display = "block";
-  frame.style.display = "block";
+  frameOverlay.style.display = "block";
   result.style.display = "none";
   document.getElementById("cameraControls").style.display = "block";
   startCamera();
