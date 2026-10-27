@@ -13,9 +13,53 @@ body {
 }
 header { padding: 16px 8px 10px; font-weight: bold; }
 main { width: min(100%, 440px); margin: auto; padding: 8px 14px 24px; }
+main {
+  width: min(100%, 1000px);
+  margin: auto;
+  padding: 8px;
+}
+
 .stage {
-  position: relative; width: 100%; aspect-ratio: 3 / 4;
-  overflow: hidden; background: #ddd; border-radius: 14px;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: #222;
+  border-radius: 8px;
+}
+
+video, #preview {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+#preview {
+  display: none;
+}
+
+.frame-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.rotate-message {
+  display: none;
+}
+
+@media (orientation: portrait) {
+  .rotate-message {
+    display: block;
+    padding: 12px;
+    font-weight: bold;
+  }
 }
 video, #preview {
   position: absolute; inset: 0; width: 100%; height: 100%;
