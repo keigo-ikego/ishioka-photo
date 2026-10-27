@@ -66,23 +66,7 @@ video, #preview {
   object-fit: cover;
 }
 #preview { display: none; }
-.frame {
-  position: absolute; inset: 0; pointer-events: none;
-  border: 8px solid #c4a36c;
-  box-shadow: inset 0 0 0 2px white;
-}
-.frame::before {
-  content: "石岡市 PHOTO FRAME";
-  position: absolute; top: 12px; left: 8px; right: 8px;
-  padding: 10px 4px; color: #493a26; background: #fffdf0dd;
-  font-weight: bold; font-size: 15px;
-}
-.frame::after {
-  content: "ISHIOKA";
-  position: absolute; bottom: 12px; left: 8px; right: 8px;
-  padding: 12px; color: #493a26; background: #fffdf0dd;
-  font-size: 13px; letter-spacing: 3px;
-}
+
 button, .save {
   display: inline-block; border: 0; border-radius: 24px;
   padding: 13px 18px; margin: 6px 3px; font-size: 15px;
@@ -198,11 +182,41 @@ let facing = "environment";
 let photoUrl = null;
 let frameImage = new Image();
 let hasFrameImage = false;
+let selectedFrame = "frame-spring.png";
 
-// frame.png があれば、実際の透過フレームを読み込みます。
-frameImage.onload = () => { hasFrameImage = true; };
-frameImage.onerror = () => { hasFrameImage = false; };
-frameImage.src = "frame.png";
+function loadFrame(filename) {
+  selectedFrame = filename;
+  hasFrameImage = false;
+  shoot.disabled = true;
+  frameOverlay.src = filename;
+  frameImage.src = filename;
+}
+
+frameImage.onload = () => {
+  hasFrameImage = true;
+  shoot.disabled = false;
+  status.textContent = "フレームを読み込みました。撮影できます。";
+
+  document.querySelectorAll("#frameChoices button").forEach(button => {
+    button.style.background =
+      button.dataset.frame === selectedFrame ? "#a36d36" : "#526448";
+  });
+};
+
+frameImage.onerror = () => {
+  hasFrameImage = false;
+  shoot.disabled = true;
+  status.textContent =
+    "フレームを読み込めません。画像ファイル名を確認してください。";
+};
+
+document.querySelectorAll("#frameChoices button").forEach(button => {
+  button.addEventListener("click", () => {
+    loadFrame(button.dataset.frame);
+  });
+});
+
+loadFrame(selectedFrame);
 
 async function startCamera() {
   shoot.disabled = true;
