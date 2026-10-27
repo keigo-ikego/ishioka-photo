@@ -51,6 +51,46 @@ button:disabled { opacity: .45; }
 #result { display: none; margin-top: 12px; }
 #result img { width: 100%; border-radius: 12px; }
 .small { font-size: 12px; color: #666; line-height: 1.6; }
+
+/* 横長の撮影画面 */
+.camera-area {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+}
+
+/* カメラ映像 */
+.camera-area video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* フレームをカメラ映像の上に固定 */
+.camera-area .frame-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* 縦画面のときは横向きにする案内を表示 */
+.rotate-message {
+  display: none;
+}
+
+@media (orientation: portrait) {
+  .rotate-message {
+    display: block;
+    text-align: center;
+    padding: 16px;
+  }
+}
+  
 </style>
 </head>
 <body>
