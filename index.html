@@ -99,7 +99,12 @@ button:disabled { opacity: .45; }
   <div class="stage">
     <video id="camera" autoplay muted playsinline></video>
     <img id="preview" alt="撮影した写真">
-    <div class="frame" id="frame"></div>
+    <img class="frame-overlay" id="frameOverlay"
+         src="frame.png" alt="">
+  </div>
+
+  <div class="rotate-message">
+    📱 スマートフォンを横向きにしてください
   </div>
 
   <div id="status">カメラを準備しています…</div>
